@@ -29,16 +29,14 @@ class AfPanGenerator:
         mixerStringFrame.pack()
         self.mixerString = Text(mixerStringFrame, height="1")
         self.mixerString.pack(padx=10, pady=3, side=LEFT)
-        stringToMixers = Button(mixerStringFrame, text=">>")
-        stringToMixers.pack(side=RIGHT)
-        stringToMixers.bind("<Button-1>", self.mixerStringToChannels)
+        self.mixerString.bind("<KeyRelease>", self.mixerStringToChannels)
 
         Label(bottomFrame, text="Commandline").pack(side=TOP)
         self.commandLine = Text(bottomFrame, height="1")
         self.commandLine.pack(padx=10, pady=3)
-        
+
     def mixerStringToChannels(self, event=None):
-        msString = self.mixerString.get("0.0linestart","0.0lineend")
+        msString = self.mixerString.get("1.0",END)
         msList = [float(val) for val in msString.split(":")]
         msSubLists = [msList[i:i+2] for i  in range(0, len(msList), 2)]
         for i in range(len(msSubLists)):
@@ -46,8 +44,6 @@ class AfPanGenerator:
             for j in range(len(currentChannels)):
                 self.channelScales[i][j].set(currentChannels[j])
         self.generate_cmdline(event)
-
-        
 
     def generate_scales(self, frame, input_channels, output_channels):
         scales = []
@@ -70,13 +66,13 @@ class AfPanGenerator:
 
         allChannels = [joinScales(channel) for channel in self.channelScales]
         slidersCombined=":".join(allChannels)
-        self.mixerString.delete("0.0linestart","0.0lineend")
-        self.mixerString.insert("0.0", slidersCombined)
+        self.mixerString.delete("1.0", END)
+        self.mixerString.insert("1.0", slidersCombined)
         self.generate_cmdline(event)
 
     def generate_cmdline(self, event=None):
-        cmdLine = self.template.get("0.0linestart","0.0lineend").format(str(self.input_channels), str(self.output_channels), self.mixerString.get("0.0linestart","0.0lineend"))
-        self.commandLine.delete("0.0linestart","0.0lineend")
+        cmdLine = self.template.get("1.0", END).format(str(self.input_channels), str(self.output_channels), self.mixerString.get("1.0", END))
+        self.commandLine.delete("1.0", END)
         self.commandLine.insert("0.0", cmdLine)
 
 
