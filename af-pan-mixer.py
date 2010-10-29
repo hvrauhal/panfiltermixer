@@ -8,10 +8,6 @@ except Exception as err:
     sys.exit(2)
 
 class AfPanGenerator:
-    '''A GUI for generating the commandlines for MPlayers pan audio filter. 
-    
-    See http://www.mplayerhq.hu/DOCS/HTML/en/advaudio-channels.html for details of the commandline format.
-    '''
     def __init__(self, master, input_count=5, output_count=2):
         self.output_channels = output_count
         self.input_channels = input_count
@@ -24,10 +20,35 @@ class AfPanGenerator:
 
         bottomFrame = Frame(master)
         bottomFrame.pack(side=TOP)
+        Label(bottomFrame, text="Template").pack()
+        self.template = Text(bottomFrame, height="1")
+        self.template.insert(INSERT, "-channels {} -af pan={}:{}")
+        self.template.pack(padx=10, pady=3)
+        Label(bottomFrame, text="Mixer string").pack()
+        mixerStringFrame = Frame(bottomFrame)
+        mixerStringFrame.pack()
+        self.mixerString = Text(mixerStringFrame, height="1")
+        self.mixerString.pack(padx=10, pady=3, side=LEFT)
+        stringToMixers = Button(mixerStringFrame, text=">>")
+        stringToMixers.pack(side=RIGHT)
+        stringToMixers.bind("<Button-1>", self.mixerStringToChannels)
 
-        self.getAfPanButton = Button(bottomFrame, text="Print commandline", command=self.generate_cmdline)
-        self.getAfPanButton.pack()
+        Label(bottomFrame, text="Commandline").pack(side=TOP)
+        self.commandLine = Text(bottomFrame, height="1")
+        self.commandLine.pack(padx=10, pady=3)
         
+    def mixerStringToChannels(self, event=None):
+        msString = self.mixerString.get("0.0linestart","0.0lineend")
+        msList = [float(val) for val in msString.split(":")]
+        msSubLists = [msList[i:i+2] for i  in range(0, len(msList), 2)]
+        for i in range(len(msSubLists)):
+            currentChannels = msSubLists[i]
+            for j in range(len(currentChannels)):
+                self.channelScales[i][j].set(currentChannels[j])
+        self.generate_cmdline(event)
+
+        
+
     def generate_scales(self, frame, input_channels, output_channels):
         scales = []
         for i in range(input_channels):
@@ -36,19 +57,27 @@ class AfPanGenerator:
             channels = []
             for j in range(output_channels):
                 channel = Scale(channelFrame, from_=1.5, to=0, resolution=0.1)
+                channel.bind("<ButtonRelease-1>", self.update_mixerstring)
                 channel.pack(side=LEFT, padx=1)
                 channels += [channel]
             scales += [channels]
         return scales
         
-    def generate_cmdline(self):
+    def update_mixerstring(self, event=None):
         def joinScales(scales):
             scaleValues = [str(scale.get()) for scale in scales]
             return ":".join(scaleValues)
 
         allChannels = [joinScales(channel) for channel in self.channelScales]
         slidersCombined=":".join(allChannels)
-        print ("-channels {} -af pan={}:{}".format(str(self.input_channels), str(self.output_channels), slidersCombined))
+        self.mixerString.delete("0.0linestart","0.0lineend")
+        self.mixerString.insert("0.0", slidersCombined)
+        self.generate_cmdline(event)
+
+    def generate_cmdline(self, event=None):
+        cmdLine = self.template.get("0.0linestart","0.0lineend").format(str(self.input_channels), str(self.output_channels), self.mixerString.get("0.0linestart","0.0lineend"))
+        self.commandLine.delete("0.0linestart","0.0lineend")
+        self.commandLine.insert("0.0", cmdLine)
 
 
 
