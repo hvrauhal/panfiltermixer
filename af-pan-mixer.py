@@ -12,7 +12,7 @@ class AfPanGenerator:
     def __init__(self, master, input_count=5, output_count=2):
         self.output_channels = output_count
         self.input_channels = input_count
-        Label(master, text="{} input channels, {} output channels for each".format(self.input_channels, self.output_channels)).pack(side=TOP)
+        Label(master, text="{} input channels, {} output channels for each\nOrder for DTS and AC3 seems to be: LF, RF, LR, RR, CE, low freq".format(self.input_channels, self.output_channels)).pack(side=TOP)
 
         slidersFrame = Frame(master)
         slidersFrame.pack(side=TOP)
