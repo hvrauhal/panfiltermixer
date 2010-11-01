@@ -55,8 +55,8 @@ class AfPanGenerator:
                 channel = Scale(channelFrame, from_=1.5, to=0, resolution=0.1)
                 channel.bind("<ButtonRelease-1>", self.update_mixerstring)
                 channel.pack(side=LEFT, padx=1)
-                channels += [channel]
-            scales += [channels]
+                channels.append(channel)
+            scales.append(channels)
         return scales
         
     def update_mixerstring(self, event=None):
