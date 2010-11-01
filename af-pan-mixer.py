@@ -6,6 +6,7 @@ except Exception as err:
     print("This program requires Python 3.1")
     import sys
     sys.exit(2)
+import re
 
 class AfPanGenerator:
     def __init__(self, master, input_count=5, output_count=2):
@@ -61,7 +62,7 @@ class AfPanGenerator:
         
     def update_mixerstring(self, event=None):
         def joinScales(scales):
-            scaleValues = [str(scale.get()) for scale in scales]
+            scaleValues = [re.sub(".0$","",str(scale.get())) for scale in scales]
             return ":".join(scaleValues)
 
         allChannels = [joinScales(channel) for channel in self.channelScales]
