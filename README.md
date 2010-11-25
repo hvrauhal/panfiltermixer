@@ -6,7 +6,7 @@ A GUI mixer for generating commandlines to use with [MPlayers](http://www.mplaye
 Usage
 -----
 Run with Python 3.1 to get help:
-    python3.1 af-pan-mixer.py -h
+    python3.1 af_pan_mixer.py -h
 
 License
 -----

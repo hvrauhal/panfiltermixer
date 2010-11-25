@@ -36,14 +36,18 @@ class AfPanGenerator:
         self.commandLine = Entry(bottomFrame, width=80)
         self.commandLine.pack(padx=10, pady=3)
 
+    def groupToIO(concatenatedMixer, outputCount):
+        valuesAsFloats = [float(val) for val in concatenatedMixer.split(":") if val != ""]
+        groupedByInputs = [valuesAsFloats[i:i+outputCount] for i  in range(0, len(valuesAsFloats), outputCount)]
+        return groupedByInputs
+
+
     def mixerStringToChannels(self, event=None):
-        msString = self.mixerString.get()
-        msList = [float(val) for val in msString.split(":")]
-        msSubLists = [msList[i:i+2] for i  in range(0, len(msList), 2)]
-        for i in range(len(msSubLists)):
-            currentChannels = msSubLists[i]
-            for j in range(len(currentChannels)):
-                self.channelScales[i][j].set(currentChannels[j])
+        inputsContainingOutputs = AfPanGenerator.groupToIO(self.mixerString.get(), self.output_channels)
+        for inputIndex in range(len(inputsContainingOutputs)):
+            outputChannels = inputsContainingOutputs[inputIndex]
+            for outputIndex in range(len(outputChannels)):
+                self.channelScales[inputIndex][outputIndex].set(outputChannels[outputIndex])
         self.generate_cmdline(event)
 
     def generate_scales(self, frame, input_channels, output_channels):
