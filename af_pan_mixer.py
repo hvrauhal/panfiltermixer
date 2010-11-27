@@ -10,9 +10,12 @@ import re
 
 class AfPanGenerator:
     def __init__(self, master, input_count=5, output_count=2):
+        self.inputChannelLabels=["LF","RF","LR","RR","C","low"]
         self.output_channels = output_count
         self.input_channels = input_count
-        Label(master, text="{} input channels, {} output channels for each\nOrder for DTS and AC3 seems to be: LF, RF, LR, RR, CE, low freq".format(self.input_channels, self.output_channels)).pack(side=TOP)
+        Label(master, text="""\
+{} input channels, {} output channels for each
+Order for DTS and AC3 input channels seems to be: {}""".format(self.input_channels, self.output_channels, ", ".join(self.inputChannelLabels))).pack(side=TOP)
 
         slidersFrame = Frame(master)
         slidersFrame.pack(side=TOP)
@@ -30,30 +33,17 @@ class AfPanGenerator:
         mixerStringFrame.pack()
         self.mixerString = Entry(mixerStringFrame, width=80)
         self.mixerString.pack(padx=10, pady=3, side=LEFT)
-        self.mixerString.bind("<KeyRelease>", self.mixerStringToChannels)
+        self.mixerString.bind("<KeyRelease>", self.mixerstring_to_scales_and_cmdline)
 
         Label(bottomFrame, text="Commandline").pack(side=TOP)
         self.commandLine = Entry(bottomFrame, width=80)
         self.commandLine.pack(padx=10, pady=3)
 
-    def groupToIO(concatenatedMixer, outputCount):
-        valuesAsFloats = [float(val) for val in concatenatedMixer.split(":") if val != ""]
-        groupedByInputs = [valuesAsFloats[i:i+outputCount] for i  in range(0, len(valuesAsFloats), outputCount)]
-        return groupedByInputs
-
-
-    def mixerStringToChannels(self, event=None):
-        inputsContainingOutputs = AfPanGenerator.groupToIO(self.mixerString.get(), self.output_channels)
-        for inputIndex in range(len(inputsContainingOutputs)):
-            outputChannels = inputsContainingOutputs[inputIndex]
-            for outputIndex in range(len(outputChannels)):
-                self.channelScales[inputIndex][outputIndex].set(outputChannels[outputIndex])
-        self.generate_cmdline(event)
-
     def generate_scales(self, frame, input_channels, output_channels):
+
         scales = []
         for i in range(input_channels):
-            channelFrame = LabelFrame(frame, text=str(i+1), padx=1, pady=1)
+            channelFrame = LabelFrame(frame, text="I: " + self.inputChannelLabels[i], padx=1, pady=1)
             channelFrame.pack(side=LEFT, padx=10, pady=10)
             channels = []
             for j in range(output_channels):
@@ -63,7 +53,7 @@ class AfPanGenerator:
                 channels.append(channel)
             scales.append(channels)
         return scales
-        
+
     def update_mixerstring(self, event=None):
         def joinScales(scales):
             scaleValues = [re.sub(".0$","",str(scale.get())) for scale in scales]
@@ -75,12 +65,23 @@ class AfPanGenerator:
         self.mixerString.insert("0", slidersCombined)
         self.generate_cmdline(event)
 
+    def mixerstring_to_scales_and_cmdline(self, event=None):
+        inputsContainingOutputs = AfPanGenerator.group_mixer_to_Is_and_Os(self.mixerString.get(), self.output_channels)
+        for inputIndex in range(len(inputsContainingOutputs)):
+            outputChannels = inputsContainingOutputs[inputIndex]
+            for outputIndex in range(len(outputChannels)):
+                self.channelScales[inputIndex][outputIndex].set(outputChannels[outputIndex])
+        self.generate_cmdline(event)
+
+    def group_mixer_to_Is_and_Os(concatenatedMixer, outputCount):
+        valuesAsFloats = [float(val) for val in concatenatedMixer.split(":") if val != ""]
+        groupedByInputs = [valuesAsFloats[i:i+outputCount] for i  in range(0, len(valuesAsFloats), outputCount)]
+        return groupedByInputs
+
     def generate_cmdline(self, event=None):
         cmdLine = self.template.get().format(str(self.input_channels), str(self.output_channels), self.mixerString.get())
         self.commandLine.delete("0", END)
         self.commandLine.insert("0", cmdLine)
-
-
 
 if __name__ == "__main__":
     def usage():
